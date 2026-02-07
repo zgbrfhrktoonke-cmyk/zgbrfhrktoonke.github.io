@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>พี่นาน้า - พี่สาวที่พร้อมกวนใจและฮีลใจคุณ</title>
     <meta name="description" content="แชทบอทพี่สาวแสนดี Powered by Google Gemini">
+    
+    <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- Import Markdown Parser for AI responses -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <style>
+        /* Base Styles */
         body {
             font-family: 'Kanit', sans-serif;
             background: #fdfbfb;
@@ -23,65 +26,50 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
-        /* --- Dark Mode Styles --- */
+        /* Dark Mode */
         body.dark-mode {
-            background-color: #111827; /* Dark Gray/Blue */
+            background-color: #111827;
             background-image: radial-gradient(#374151 1.5px, transparent 1.5px), radial-gradient(#374151 1.5px, #111827 1.5px);
         }
-        
         body.dark-mode header,
         body.dark-mode .game-status-bar,
         body.dark-mode .input-area {
-            background: rgba(31, 41, 55, 0.98); /* Gray-800 */
-            border-color: #374151; /* Gray-700 */
+            background: rgba(31, 41, 55, 0.98);
+            border-color: #374151;
         }
-        
-        body.dark-mode h1 { color: #f472b6; /* Pink-400 */ }
-        body.dark-mode p { color: #9ca3af; /* Gray-400 */ }
-        
+        body.dark-mode h1 { color: #f472b6; }
+        body.dark-mode p { color: #9ca3af; }
         body.dark-mode .bot-bubble {
-            background: #1f2937; /* Gray-800 */
-            color: #e5e7eb; /* Gray-200 */
+            background: #1f2937;
+            color: #e5e7eb;
             border-color: #374151;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-        
         body.dark-mode .user-bubble {
-            background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); /* Dark Pink Gradient */
-            color: #fce7f3; /* Pink-100 */
+            background: linear-gradient(135deg, #be185d 0%, #9d174d 100%);
+            color: #fce7f3;
             box-shadow: 0 2px 8px rgba(190, 24, 93, 0.4);
         }
-
         body.dark-mode .chip {
             background: #1f2937;
-            border-color: #db2777; /* Pink-600 */
-            color: #f472b6; /* Pink-400 */
+            border-color: #db2777;
+            color: #f472b6;
         }
-        body.dark-mode .chip:hover {
-            background: #374151;
-        }
-        
+        body.dark-mode .chip:hover { background: #374151; }
         body.dark-mode input {
             background: #374151;
             color: #f3f4f6;
             border-color: #4b5563;
         }
         body.dark-mode input::placeholder { color: #9ca3af; }
-
-        body.dark-mode .chat-avatar-small {
-            border-color: #374151;
-        }
-        
+        body.dark-mode .chat-avatar-small { border-color: #374151; }
         body.dark-mode #bot-avatar-container {
              border-color: #374151;
              background-color: #374151;
         }
-        body.dark-mode #avatar-fallback {
-            background-color: #1f2937;
-        }
+        body.dark-mode #avatar-fallback { background-color: #1f2937; }
 
-        /* --- End Dark Mode Styles --- */
-
+        /* Layout & Scroll */
         .chat-container {
             flex: 1;
             overflow-y: auto;
@@ -93,15 +81,19 @@
         .chat-container::-webkit-scrollbar-track { background: transparent; }
         .chat-container::-webkit-scrollbar-thumb { background-color: rgba(255, 182, 193, 0.5); border-radius: 20px; }
 
+        /* --- Animations --- */
+        
+        /* 1. Message Pop-up Animation (Active) */
         @keyframes popIn {
-            from { opacity: 0; transform: scale(0.9) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            0% { opacity: 0; transform: translateY(10px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .chat-row {
             display: flex;
             align-items: flex-end;
             margin-bottom: 16px;
+            /* Apply pop-up animation to messages */
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         
@@ -174,9 +166,9 @@
             display: flex;
             gap: 12px;
             align-items: center;
-            /* เพิ่มเงาให้แยกส่วนจากแชทชัดเจนขึ้น */
             box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
         }
+
         .typing-indicator {
             font-size: 0.85rem;
             color: #ff8da1;
@@ -185,6 +177,7 @@
             font-weight: 300;
             height: 20px;
         }
+
         .chip {
             background: white;
             border: 1px solid #ffd1dc;
@@ -221,15 +214,16 @@
         }
         .hidden-layer { opacity: 0; pointer-events: none; z-index: -1; }
         .visible-layer { opacity: 1; z-index: 10; }
-
-        /* Only keeping static filter for sad */
-        .anim-sad { filter: grayscale(0.6) brightness(0.9); transition: all 0.5s; }
         
+        /* Sad Filter Effect (Static only) */
+        .anim-sad { filter: grayscale(0.6) brightness(0.9); transition: all 0.5s; }
+
         @media (max-width: 640px) {
             .chat-bubble { max-width: 85%; }
             .input-area { padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
         }
     </style>
+    <!-- Fallback Avatar Script -->
     <script>
         function useFallbackAvatar() {
             const img = document.getElementById('avatar-img');
@@ -321,7 +315,6 @@
     </div>
 
     <div class="input-area">
-        <!-- ปรับแต่งช่อง input ให้ชัดเจนขึ้น -->
         <input type="text" id="user-input" placeholder="พิมพ์ข้อความตรงนี้จ้ะ..." 
                class="flex-1 p-3 md:p-4 bg-white rounded-xl border-2 border-pink-200 outline-none focus:border-pink-400 focus:ring-0 transition-all text-gray-700 placeholder-gray-400 shadow-sm">
         <button id="send-btn" class="bg-gradient-to-r from-pink-400 to-rose-400 text-white px-6 py-3 md:px-8 md:py-3 rounded-xl hover:shadow-lg hover:from-pink-500 hover:to-rose-500 active:scale-95 transition-all font-medium whitespace-nowrap shadow-md">
@@ -329,13 +322,31 @@
         </button>
     </div>
 
-    <!-- API Key Warning Modal -->
-    <div id="api-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-6 rounded-2xl max-w-sm w-[90%] shadow-2xl text-center">
-            <h3 class="text-xl font-bold text-pink-600 mb-2">⚠️ แจ้งเตือน API Key</h3>
-            <p class="text-gray-600 text-sm mb-4">คุณยังไม่ได้ใส่ Google AI API Key พี่นาน้าจะตอบได้แค่ประโยคพื้นฐานเท่านั้น</p>
-            <p class="text-gray-500 text-xs mb-4">กรุณาแก้ไขไฟล์แล้วใส่ Key ในบรรทัดที่ 300 หรือใช้งานแบบ Offline Mode (ตอบสคริปต์)</p>
-            <button onclick="document.getElementById('api-modal').style.display='none'" class="bg-pink-500 text-white px-6 py-2 rounded-full hover:bg-pink-600 w-full">เข้าใจแล้ว</button>
+    <!-- API Key Input Modal (Secure) -->
+    <div id="api-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-8 rounded-2xl max-w-sm w-[90%] shadow-2xl text-center transform transition-all scale-100">
+            <div class="mb-4 text-4xl">🔑</div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">ตั้งค่า API Key</h3>
+            <p class="text-gray-500 text-sm mb-4">
+                เพื่อความปลอดภัย กรุณาใส่ <b>Google Gemini API Key</b> ของคุณเอง
+                <br><span class="text-xs">(คีย์จะถูกบันทึกในเครื่องของคุณเท่านั้น)</span>
+            </p>
+            
+            <input type="password" id="api-key-input" placeholder="วาง API Key ที่นี่ (AIza...)" 
+                   class="w-full p-3 border border-gray-300 rounded-lg mb-4 text-sm focus:border-pink-500 outline-none">
+            
+            <button onclick="saveApiKey()" class="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-6 py-2 rounded-full hover:shadow-lg w-full font-medium mb-3 transition-transform active:scale-95">
+                ยืนยันและเริ่มใช้งาน
+            </button>
+            
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs text-pink-500 hover:underline">
+                ยังไม่มี Key? กดขอฟรีที่นี่
+            </a>
+            <div class="mt-4 pt-4 border-t border-gray-100">
+                <button onclick="useOfflineMode()" class="text-xs text-gray-400 hover:text-gray-600">
+                    ใช้งานโหมดออฟไลน์ (ตอบตามสคริปต์)
+                </button>
+            </div>
         </div>
     </div>
 
@@ -343,50 +354,50 @@
     <script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        const API_KEY = 'AIzaSyDbf5ulaU8or8KgvaKLDXlbd9V6LDXPZuw';
+        // ==========================================
+        // 🔴 ตั้งค่า AI (Gemini) ตรงนี้ 🔴
+        // ==========================================
+        const API_KEY_HARDCODED = 'AIzaSyDbf5ulaU8or8KgvaKLDXlbd9V6LDXPZuw';
         const MODEL_NAME_PRIMARY = 'gemini-2.5-flash';
         const MODEL_NAME_FALLBACK = 'gemini-1.5-flash'; 
+        // ==========================================
 
         let genAI = null;
         let model = null;
         let chatSession = null;
         let isUsingFallback = false;
 
-        function initChat(modelInstance) {
-             const generationConfig = {
-                temperature: 0.9,
-                topK: 1,
-                topP: 1,
-                maxOutputTokens: 2048,
-            };
-            
-            const systemInstruction = "You are Pi Nana (พี่นาน้า). Act as a kind, caring, slightly teasing older sister (Onee-san) who is an office worker. You are knowledgeable in Math, Science, English, and love giving advice. Speak Thai naturally, use emojis, be sweet but smart. Do not mention you are an AI unless asked specifically. Keep answers concise.";
-            
-            chatSession = modelInstance.startChat({
-                generationConfig,
-                history: [
-                    {
-                        role: "user",
-                        parts: [{ text: systemInstruction }]
-                    },
-                    {
-                        role: "model",
-                        parts: [{ text: "รับทราบจ้ะ! พี่นาน้าคนนี้พร้อมดูแลเราแล้ว มีอะไรเล่าให้พี่ฟังได้หมดเลยนะจ๊ะ 💖" }]
-                    }
-                ],
-            });
-        }
-
-        if (API_KEY) {
+        // Init AI with dynamic key
+        window.initAI = async function(key) {
+            if (!key) return false;
             try {
-                genAI = new GoogleGenerativeAI(API_KEY);
+                genAI = new GoogleGenerativeAI(key);
                 model = genAI.getGenerativeModel({ model: MODEL_NAME_PRIMARY });
-                initChat(model);
+                
+                const generationConfig = {
+                    temperature: 0.9,
+                    topK: 1,
+                    topP: 1,
+                    maxOutputTokens: 2048,
+                };
+                
+                const systemInstruction = "You are Pi Nana (พี่นาน้า). Act as a kind, caring, slightly teasing older sister (Onee-san) who is an office worker. You are knowledgeable in Math, Science, English, and love giving advice. Speak Thai naturally, use emojis, be sweet but smart. Do not mention you are an AI unless asked specifically. Keep answers concise.";
+                
+                chatSession = model.startChat({
+                    generationConfig,
+                    history: [
+                        { role: "user", parts: [{ text: systemInstruction }] },
+                        { role: "model", parts: [{ text: "รับทราบจ้ะ! พี่นาน้าคนนี้พร้อมดูแลเราแล้ว มีอะไรเล่าให้พี่ฟังได้หมดเลยนะจ๊ะ 💖" }] }
+                    ],
+                });
+                return true;
             } catch (error) {
                 console.error("AI Init Error:", error);
+                return false;
             }
-        }
+        };
 
+        // Call Gemini Logic
         window.callGeminiSDK = async function(userText) {
             if (!chatSession) return null;
             try {
@@ -400,13 +411,12 @@
                     try {
                         isUsingFallback = true;
                         const fallbackModel = genAI.getGenerativeModel({ model: MODEL_NAME_FALLBACK });
-                        initChat(fallbackModel); 
                         
-                        const result = await chatSession.sendMessage(userText);
-                        const response = await result.response;
-                        return response.text();
+                        // Re-init logic for simple fallback
+                        // For this demo, we'll return null to let the offline script handle it or retry manually next time
+                        // In a full app, you'd recreate the chatSession with history here.
+                        return null; 
                     } catch (fallbackError) {
-                        console.error("Fallback Model Error:", fallbackError);
                         return null; 
                     }
                 }
@@ -414,10 +424,11 @@
             }
         };
         
-        window.hasApiKey = function() { return !!API_KEY; };
+        // Check if hardcoded key exists to skip modal
+        window.getHardcodedKey = function() { return API_KEY_HARDCODED; };
     </script>
 
-    <!-- Main Logic Script -->
+    <!-- Main Logic Script (UI & Game) -->
     <script>
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
@@ -434,19 +445,21 @@
         // Global State
         let gameState = { active: false, currentScenarioIndex: 0, score: parseInt(localStorage.getItem('nana_score')) || 0 };
         let isDarkMode = false;
+        let userApiKey = localStorage.getItem('gemini_api_key') || '';
 
         window.onload = function() {
-            const hour = new Date().getHours();
-            let greetingMsg = "สวัสดีจ้ะ! พี่นาน้า (โหมด AI) พร้อมคุยแล้ว ถามอะไรยากๆ มาได้เลยนะ!";
-            
-            setTimeout(() => {
-                if (window.hasApiKey && !window.hasApiKey()) {
-                    greetingMsg = "สวัสดีจ้ะ! (ตอนนี้พี่อยู่ในโหมด Offline ตอบได้เฉพาะสคริปต์นะจ๊ะ ถ้าอยากให้พี่ฉลาด อย่าลืมใส่ API Key น้า)";
+            // Check for Hardcoded Key first, then LocalStorage, then Modal
+            waitForSDK().then(() => {
+                const hardcodedKey = window.getHardcodedKey ? window.getHardcodedKey() : '';
+                const finalKey = hardcodedKey || userApiKey;
+
+                if (finalKey) {
+                    window.initAI(finalKey);
+                    addWelcomeMessage();
+                } else {
                     document.getElementById('api-modal').style.display = 'flex';
                 }
-                addMessage(greetingMsg, false);
-                setFace('happy');
-            }, 500);
+            });
 
             // Check system preference for dark mode
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -454,7 +467,54 @@
             }
         };
 
-        // --- Theme Logic ---
+        // Wait for module script to load
+        function waitForSDK() {
+            return new Promise(resolve => {
+                const check = () => {
+                    if (window.initAI) resolve();
+                    else setTimeout(check, 100);
+                };
+                check();
+            });
+        }
+
+        // --- API Key Management ---
+        window.saveApiKey = function() {
+            const input = document.getElementById('api-key-input');
+            const key = input.value.trim();
+            if (key) {
+                localStorage.setItem('gemini_api_key', key);
+                userApiKey = key;
+                window.initAI(key);
+                document.getElementById('api-modal').style.display = 'none';
+                addWelcomeMessage();
+            } else {
+                alert("กรุณาใส่ API Key ก่อนนะจ๊ะ");
+            }
+        }
+
+        window.useOfflineMode = function() {
+            document.getElementById('api-modal').style.display = 'none';
+            addMessage("สวัสดีจ้ะ! (โหมดออฟไลน์) ถึงพี่จะไม่ฉลาดเท่าไหร่ แต่ก็พร้อมคุยนะ! 💖", false);
+        }
+
+        function addWelcomeMessage() {
+             const hour = new Date().getHours();
+            let greetingMsg = "สวัสดีจ้ะ! พี่นาน้า (AI) พร้อมคุยแล้ว ถามอะไรยากๆ มาได้เลยนะ!";
+
+            if (hour >= 5 && hour < 12) {
+                greetingMsg = "อรุณสวัสดิ์จ้ะ! เช้าสดใสแบบนี้ ทานข้าวเช้ารึยัง? วันนี้ดวงดีแน่นอน! ☀️";
+            } else if (hour >= 12 && hour < 17) {
+                greetingMsg = "สวัสดีตอนบ่ายจ้ะ! ถ้าง่วงก็มาเล่นเป่ายิ้งฉุบแก้เบื่อกับพี่ได้นะ 🍹";
+            } else if (hour >= 17 && hour < 22) {
+                greetingMsg = "เย็นแล้วนะ! วันนี้เรียนหรือทำงานเหนื่อยมั้ย? มาให้พี่กอดหน่อยเร้ว 🌇";
+            } else {
+                greetingMsg = "ดึกแล้วนะคนเก่ง... ยังไม่นอนเหรอ? พักผ่อนได้แล้วนะ 🌙";
+            }
+            addMessage(greetingMsg, false);
+            setFace('happy');
+        }
+
         window.toggleTheme = function() {
             isDarkMode = !isDarkMode;
             document.body.classList.toggle('dark-mode');
@@ -474,7 +534,7 @@
 
         // --- Avatar Logic ---
         function setFace(mood) {
-            // Simple Sad Filter Only
+            // Simple Sad Filter Only - No Movement
             if(avatarImg) {
                 if(mood === 'sad' || mood === 'worry') {
                     avatarImg.classList.add('anim-sad');
@@ -491,6 +551,7 @@
             if (!isUser) {
                 const avatar = document.createElement('img');
                 const mainAvatar = document.getElementById('avatar-img');
+                // Use the main avatar image as source for small chat bubbles
                 avatar.src = mainAvatar && mainAvatar.src ? mainAvatar.src : 'https://api.dicebear.com/9.x/avataaars/svg?seed=PiNanaFallback';
                 avatar.className = "chat-avatar-small";
                 avatar.onerror = function() { this.src = 'https://api.dicebear.com/9.x/avataaars/svg?seed=PiNanaFallback'; };
@@ -530,7 +591,6 @@
             typingIndicator.style.display = 'flex';
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
-            // Decide: Game Logic OR AI Logic
             if (gameState.active) {
                 setTimeout(() => {
                     typingIndicator.style.display = 'none';
@@ -547,7 +607,6 @@
                         sendBtn.style.opacity = '1';
                     }, 1000);
                 } else {
-                    // Try Calling AI first
                     let aiResponse = null;
                     if (window.callGeminiSDK) {
                         aiResponse = await window.callGeminiSDK(text);
@@ -557,17 +616,14 @@
                     
                     if (aiResponse) {
                         addMessage(aiResponse, false);
-                        
-                        // Simple mood detection for AI response (Only for sad filter)
-                        if(aiResponse.includes("เสียใจ") || aiResponse.includes("กอด")) setFace('worry');
-                        else if(aiResponse.includes("เศร้า")) setFace('sad');
-                        else setFace('happy');
-                        
+                        if(window.setFace) {
+                            if(aiResponse.includes("เสียใจ") || aiResponse.includes("เศร้า")) window.setFace('sad');
+                            else window.setFace('happy');
+                        }
                     } else {
-                        // Fallback to offline script
                         const fallbackResponse = getScriptedResponse(text);
                         addMessage(fallbackResponse.text, false);
-                        setFace(fallbackResponse.mood);
+                        if(window.setFace) window.setFace(fallbackResponse.mood);
                     }
                     
                     sendBtn.disabled = false;
@@ -582,7 +638,7 @@
             const gentleResponses = {
                 "tired": { text: "โอ๋ๆ... มาให้พี่กอดนะคนเก่ง เหนื่อยมากเลยใช่ไหม? พักก่อนนะจ๊ะ", mood: "worry" },
                 "love": { text: "งื้อออ... ปากหวานจังเลย ชื่นใจที่สุดเลยจ้ะ!", mood: "love" },
-                "default": { text: "จ้ะ... พี่ตั้งใจฟังอยู่นะ (แต่ถ้าอยากให้พี่ฉลาดกว่านี้ อย่าลืมใส่ API Key นะจ๊ะ!)", mood: "happy" }
+                "default": { text: "จ้ะ... พี่ตั้งใจฟังอยู่นะ (ตอนนี้ใช้โหมด Offline ตอบได้จำกัดนะจ๊ะ)", mood: "happy" }
             };
             
             if (text.includes("เหนื่อย")) return gentleResponses.tired;
@@ -609,7 +665,7 @@
             gameStatusBar.style.display = 'none';
             addMessage(`จบเกมจ้ะ! สนุกมากเลย ไว้มาเล่นกันใหม่นะ (คะแนน: ${gameState.score})`, false);
             localStorage.setItem('nana_score', gameState.score);
-            setFace('happy');
+            if(window.setFace) window.setFace('happy');
         }
 
         function processGameInput(text) {
@@ -623,7 +679,7 @@
             let mood = score >= 10 ? 'love' : (score > 0 ? 'happy' : 'angry');
             
             addMessage(reply, false);
-            setFace(mood);
+            if(window.setFace) window.setFace(mood);
             updateHeartBar();
             setTimeout(askRandomQuestion, 2000);
         }
@@ -633,7 +689,7 @@
             const q = gameScenarios[Math.floor(Math.random() * gameScenarios.length)].q;
             gameStatusBar.style.display = 'flex';
             addMessage(q, false);
-            setFace('happy');
+            if(window.setFace) window.setFace('happy');
         }
 
         function updateHeartBar() {
