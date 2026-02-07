@@ -81,9 +81,7 @@
         .chat-container::-webkit-scrollbar-track { background: transparent; }
         .chat-container::-webkit-scrollbar-thumb { background-color: rgba(255, 182, 193, 0.5); border-radius: 20px; }
 
-        /* --- Animations --- */
-        
-        /* 1. Message Pop-up Animation (Active) */
+        /* Animations */
         @keyframes popIn {
             0% { opacity: 0; transform: translateY(10px) scale(0.95); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
@@ -93,7 +91,6 @@
             display: flex;
             align-items: flex-end;
             margin-bottom: 16px;
-            /* Apply pop-up animation to messages */
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         
@@ -190,6 +187,7 @@
             white-space: nowrap;
             user-select: none;
             flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(255, 182, 193, 0.1);
         }
         .chip:hover {
             background: #fff0f3;
@@ -198,7 +196,7 @@
         }
         
         #bot-avatar-container {
-            /* Static Image */
+            /* Static Image - No movement animation */
             position: relative;
             overflow: hidden;
             flex-shrink: 0;
@@ -264,7 +262,6 @@
                         </g>
                     </svg>
                 </div>
-                <!-- Emoji Overlay REMOVED -->
             </div>
             
             <div>
@@ -322,31 +319,13 @@
         </button>
     </div>
 
-    <!-- API Key Input Modal (Secure) -->
-    <div id="api-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-8 rounded-2xl max-w-sm w-[90%] shadow-2xl text-center transform transition-all scale-100">
-            <div class="mb-4 text-4xl">🔑</div>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">ตั้งค่า API Key</h3>
-            <p class="text-gray-500 text-sm mb-4">
-                เพื่อความปลอดภัย กรุณาใส่ <b>Google Gemini API Key</b> ของคุณเอง
-                <br><span class="text-xs">(คีย์จะถูกบันทึกในเครื่องของคุณเท่านั้น)</span>
-            </p>
-            
-            <input type="password" id="api-key-input" placeholder="วาง API Key ที่นี่ (AIza...)" 
-                   class="w-full p-3 border border-gray-300 rounded-lg mb-4 text-sm focus:border-pink-500 outline-none">
-            
-            <button onclick="saveApiKey()" class="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-6 py-2 rounded-full hover:shadow-lg w-full font-medium mb-3 transition-transform active:scale-95">
-                ยืนยันและเริ่มใช้งาน
-            </button>
-            
-            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs text-pink-500 hover:underline">
-                ยังไม่มี Key? กดขอฟรีที่นี่
-            </a>
-            <div class="mt-4 pt-4 border-t border-gray-100">
-                <button onclick="useOfflineMode()" class="text-xs text-gray-400 hover:text-gray-600">
-                    ใช้งานโหมดออฟไลน์ (ตอบตามสคริปต์)
-                </button>
-            </div>
+    <!-- API Key Warning Modal -->
+    <div id="api-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-6 rounded-2xl max-w-sm w-[90%] shadow-2xl text-center">
+            <h3 class="text-xl font-bold text-pink-600 mb-2">⚠️ แจ้งเตือน API Key</h3>
+            <p class="text-gray-600 text-sm mb-4">คุณยังไม่ได้ใส่ Google AI API Key พี่นาน้าจะตอบได้แค่ประโยคพื้นฐานเท่านั้น</p>
+            <p class="text-gray-500 text-xs mb-4">กรุณาแก้ไขไฟล์แล้วใส่ Key ในบรรทัดที่ 300 หรือใช้งานแบบ Offline Mode (ตอบสคริปต์)</p>
+            <button onclick="document.getElementById('api-modal').style.display='none'" class="bg-pink-500 text-white px-6 py-2 rounded-full hover:bg-pink-600 w-full">เข้าใจแล้ว</button>
         </div>
     </div>
 
@@ -357,8 +336,10 @@
         // ==========================================
         // 🔴 ตั้งค่า AI (Gemini) ตรงนี้ 🔴
         // ==========================================
-        const API_KEY_HARDCODED = 'AIzaSyDbf5ulaU8or8KgvaKLDXlbd9V6LDXPZuw';
+        const API_KEY = 'AIzaSyDbf5ulaU8or8KgvaKLDXlbd9V6LDXPZuw';
+        // ใช้ gemini-2.5-flash เป็นรุ่นหลักตามที่ขอ
         const MODEL_NAME_PRIMARY = 'gemini-2.5-flash';
+        // สำรองเผื่อรุ่นใหม่ยังมีปัญหา
         const MODEL_NAME_FALLBACK = 'gemini-1.5-flash'; 
         // ==========================================
 
@@ -411,10 +392,7 @@
                     try {
                         isUsingFallback = true;
                         const fallbackModel = genAI.getGenerativeModel({ model: MODEL_NAME_FALLBACK });
-                        
-                        // Re-init logic for simple fallback
-                        // For this demo, we'll return null to let the offline script handle it or retry manually next time
-                        // In a full app, you'd recreate the chatSession with history here.
+                        // Simple retry logic without full re-init for this demo
                         return null; 
                     } catch (fallbackError) {
                         return null; 
@@ -425,7 +403,7 @@
         };
         
         // Check if hardcoded key exists to skip modal
-        window.getHardcodedKey = function() { return API_KEY_HARDCODED; };
+        window.getHardcodedKey = function() { return API_KEY; };
     </script>
 
     <!-- Main Logic Script (UI & Game) -->
