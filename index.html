@@ -3,681 +3,623 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>พี่นาน้า - พี่สาวที่พร้อมกวนใจและฮีลใจคุณ</title>
-    <meta name="description" content="แชทบอทพี่สาวแสนดี Powered by Google Gemini">
+    <title>พี่นาน้า (Phi Nana) AI Advisor</title>
     
-    <!-- External Libraries -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            950: '#020617', // Main bg
+                            900: '#0f172a', // Secondary bg
+                            800: '#1e293b', // Component bg
+                            700: '#334155', // Border
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* Base Styles */
+        /* Custom Styles for Dark Mode */
         body {
-            font-family: 'Kanit', sans-serif;
-            background: #fdfbfb;
-            background-image: radial-gradient(circle at 50% 50%, #fffbf0 0%, #fff0f5 100%);
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #020617; /* Dark background */
+            color: #f1f5f9; /* Light text */
+            overflow: hidden;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fade-in-up 0.3s ease-out forwards;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(168, 85, 247, 0.5); }
+            50% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.8); }
+        }
+        .animate-pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+
+        #root {
             height: 100vh;
-            height: 100dvh; 
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        /* Dark Mode */
-        body.dark-mode {
-            background-color: #111827;
-            background-image: radial-gradient(#374151 1.5px, transparent 1.5px), radial-gradient(#374151 1.5px, #111827 1.5px);
-        }
-        body.dark-mode header,
-        body.dark-mode .game-status-bar,
-        body.dark-mode .input-area {
-            background: rgba(31, 41, 55, 0.98);
-            border-color: #374151;
-        }
-        body.dark-mode h1 { color: #f472b6; }
-        body.dark-mode p { color: #9ca3af; }
-        body.dark-mode .bot-bubble {
-            background: #1f2937;
-            color: #e5e7eb;
-            border-color: #374151;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-        body.dark-mode .user-bubble {
-            background: linear-gradient(135deg, #be185d 0%, #9d174d 100%);
-            color: #fce7f3;
-            box-shadow: 0 2px 8px rgba(190, 24, 93, 0.4);
-        }
-        body.dark-mode .chip {
-            background: #1f2937;
-            border-color: #db2777;
-            color: #f472b6;
-        }
-        body.dark-mode .chip:hover { background: #374151; }
-        body.dark-mode input {
-            background: #374151;
-            color: #f3f4f6;
-            border-color: #4b5563;
-        }
-        body.dark-mode input::placeholder { color: #9ca3af; }
-        body.dark-mode .chat-avatar-small { border-color: #374151; }
-        body.dark-mode #bot-avatar-container {
-             border-color: #374151;
-             background-color: #374151;
-        }
-        body.dark-mode #avatar-fallback { background-color: #1f2937; }
-
-        /* Layout & Scroll */
-        .chat-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch; 
-        }
-        .chat-container::-webkit-scrollbar { width: 6px; }
-        .chat-container::-webkit-scrollbar-track { background: transparent; }
-        .chat-container::-webkit-scrollbar-thumb { background-color: rgba(255, 182, 193, 0.5); border-radius: 20px; }
-
-        /* Animations */
-        @keyframes popIn {
-            0% { opacity: 0; transform: translateY(10px) scale(0.95); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .chat-row {
-            display: flex;
-            align-items: flex-end;
-            margin-bottom: 16px;
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        
-        .chat-row.bot { justify-content: flex-start; }
-        .chat-row.user { justify-content: flex-end; }
-
-        .chat-avatar-small {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            margin-right: 10px;
-            object-fit: cover;
-            border: 2px solid white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            flex-shrink: 0;
-            background-color: #f0f0f0;
-        }
-
-        .chat-bubble {
-            max-width: 80%;
-            padding: 12px 18px;
-            border-radius: 22px;
-            line-height: 1.6;
-            font-size: 1rem;
-            position: relative;
-            word-wrap: break-word;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-        
-        .chat-bubble p { margin-bottom: 0.5em; }
-        .chat-bubble p:last-child { margin-bottom: 0; }
-        .chat-bubble ul, .chat-bubble ol { margin-left: 20px; margin-bottom: 0.5em; list-style-type: disc; }
-
-        .bot-bubble {
-            background: white;
-            color: #333;
-            border-bottom-left-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border: 1px solid #f0f0f0;
-        }
-
-        .user-bubble {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-            color: #5e3a3a;
-            border-bottom-right-radius: 4px;
-            box-shadow: 0 2px 8px rgba(255, 154, 158, 0.3);
-        }
-
-        .game-status-bar {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 10px 20px;
-            border-bottom: 1px solid #ffe4e1;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.95rem;
-            color: #d81b60;
-            animation: slideDown 0.4s ease;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            z-index: 30;
-        }
-        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
-
-        .input-area {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            padding-bottom: max(20px, env(safe-area-inset-bottom));
-            border-top: 1px solid rgba(255, 228, 230, 0.5);
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
-        }
-
-        .typing-indicator {
-            font-size: 0.85rem;
-            color: #ff8da1;
-            margin: 0 0 10px 58px;
-            display: none;
-            font-weight: 300;
-            height: 20px;
-        }
-
-        .chip {
-            background: white;
-            border: 1px solid #ffd1dc;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: #d81b60;
-            white-space: nowrap;
-            user-select: none;
-            flex-shrink: 0;
-            box-shadow: 0 2px 4px rgba(255, 182, 193, 0.1);
-        }
-        .chip:hover {
-            background: #fff0f3;
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(216, 27, 96, 0.1);
-        }
-        
-        #bot-avatar-container {
-            /* Static Image - No movement animation */
-            position: relative;
-            overflow: hidden;
-            flex-shrink: 0;
-            transition: border-color 0.3s ease;
-        }
-        
-        .avatar-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .hidden-layer { opacity: 0; pointer-events: none; z-index: -1; }
-        .visible-layer { opacity: 1; z-index: 10; }
-        
-        /* Sad Filter Effect (Static only) */
-        .anim-sad { filter: grayscale(0.6) brightness(0.9); transition: all 0.5s; }
-
-        @media (max-width: 640px) {
-            .chat-bubble { max-width: 85%; }
-            .input-area { padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+            height: 100dvh;
         }
     </style>
-    <!-- Fallback Avatar Script -->
-    <script>
-        function useFallbackAvatar() {
-            const img = document.getElementById('avatar-img');
-            const fallback = document.getElementById('avatar-fallback');
-            if(img && fallback) {
-                img.style.display = 'none';
-                fallback.classList.remove('hidden-layer');
-                fallback.classList.add('visible-layer');
-            }
-        }
-    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div id="root"></div>
 
-    <!-- Header -->
-    <header class="bg-white/80 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-pink-100 sticky top-0 z-20 shadow-sm transition-colors duration-300">
-        <div class="flex items-center gap-4">
-            <div id="bot-avatar-container" class="w-14 h-14 md:w-16 md:h-16 bg-pink-100 rounded-full shadow-inner border-2 border-white cursor-pointer select-none relative overflow-hidden">
-                <img id="avatar-img" 
-                     src="https://i.postimg.cc/8PbPS4rb/Cute-anime-Office-Work-girl-With-Book-(1)-2000x3569.jpg" 
-                     class="avatar-layer visible-layer w-full h-full object-cover"
-                     onerror="useFallbackAvatar()"
-                     alt="พี่นาน้า">
-                
-                <div id="avatar-fallback" class="avatar-layer hidden-layer w-full h-full bg-[#f0f4f8] flex items-end justify-center overflow-hidden">
-                    <svg viewBox="0 0 100 100" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M15 85 Q50 95 85 85 L90 100 L10 100 Z" fill="#89C4E8" />
-                        <path d="M30 75 Q50 85 70 75 L70 90 L30 90 Z" fill="#FFF0E5" />
-                        <path d="M15 40 Q5 90 20 100 L80 100 Q95 90 85 40 Z" fill="#333333" />
-                        <g>
-                            <path d="M25 45 Q25 85 50 90 Q75 85 75 45 Q75 10 50 10 Q25 10 25 45" fill="#FFF0E5" />
-                            <path d="M20 45 C20 45, 25 15, 50 20 C75 15, 80 45, 80 45 C80 45, 70 30, 60 35 C50 30, 40 35, 40 35 C30 30, 20 45, 20 45" fill="#333333" />
-                            <circle cx="35" cy="53" r="6" fill="#FFF" />
-                            <circle cx="65" cy="53" r="6" fill="#FFF" />
-                            <circle cx="35" cy="53" r="4" fill="#4B5D7E" />
-                            <circle cx="65" cy="53" r="4" fill="#4B5D7E" />
-                            <path d="M46 72 Q50 74 54 72" stroke="#D81B60" stroke-width="1.5" fill="none" />
-                        </g>
-                    </svg>
-                </div>
-            </div>
-            
-            <div>
-                <h1 class="font-bold text-pink-600 text-lg md:text-xl tracking-tight leading-tight transition-colors duration-300">พี่นาน้า (AI)</h1>
-                <p class="text-xs md:text-sm text-pink-400 font-light transition-colors duration-300">สาวออฟฟิศแสนดี 📚</p>
-            </div>
-        </div>
-        <div class="flex gap-2">
-            <!-- Theme Toggle Button -->
-            <button id="theme-toggle" onclick="toggleTheme()" class="bg-pink-100 text-pink-500 p-2 rounded-full hover:bg-pink-200 transition-colors shadow-sm w-10 h-10 flex items-center justify-center" title="เปลี่ยนธีม">
-                🌙
-            </button>
-            <button onclick="startGame()" class="bg-pink-100 text-pink-500 p-2 rounded-full hover:bg-pink-200 transition-colors shadow-sm w-10 h-10 flex items-center justify-center" title="เล่นเกมจีบพี่นาน้า">
-                🎮
-            </button>
-        </div>
-    </header>
+    <!-- Main Script -->
+    <script type="text/babel" data-type="module">
+        import React, { useState, useRef, useEffect, Component } from 'https://esm.sh/react@18.2.0';
+        import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+        import { 
+            Send, Heart, BookOpen, Smile, User, Sparkles, MessageCircle, 
+            RefreshCw, X, Brain, GraduationCap, Lightbulb, ShieldCheck,
+            Phone, Video, Info, Image as ImageIcon, ThumbsUp, MoreHorizontal,
+            Bell, Search, ChevronRight, ArrowLeft, Gamepad2, Trophy, Calculator, Globe, Star,
+            Wand2, Paperclip, Camera, Loader2, AlertCircle, Maximize, Minimize 
+        } from 'https://esm.sh/lucide-react@0.263.1';
 
-    <div id="game-status" class="game-status-bar">
-        <span class="font-bold">💕 โหมดจีบพี่สาว (Endless)</span>
-        <div class="flex items-center gap-2">
-            <span>คะแนนหัวใจ:</span>
-            <div class="w-24 h-3 bg-pink-100 rounded-full overflow-hidden border border-pink-200">
-                <div id="mini-heart-bar" class="h-full bg-gradient-to-r from-pink-400 to-rose-500 w-0 transition-all duration-500"></div>
-            </div>
-            <span id="score-display" class="text-xs text-pink-500 font-bold ml-1">0</span>
-            <button onclick="quitGame()" class="text-xs text-gray-400 underline ml-2">เลิกเล่น</button>
-        </div>
-    </div>
-
-    <div id="chat-container" class="chat-container flex flex-col">
-        <!-- Initial Message -->
-    </div>
-
-    <div id="typing" class="typing-indicator flex items-center gap-2">
-        <span>พี่นาน้ากำลังคิด...</span>
-        <span class="animate-bounce">.</span>
-        <span class="animate-bounce delay-100">.</span>
-        <span class="animate-bounce delay-200">.</span>
-    </div>
-
-    <div class="flex gap-2 mb-2 overflow-x-auto px-6 py-2 no-scrollbar" id="chips" style="-webkit-overflow-scrolling: touch;">
-        <div class="chip border-pink-300 bg-pink-50 font-medium" onclick="startGame()">🎮 เล่นเกมจีบ</div>
-        <div class="chip" onclick="quickSend('เล่าเรื่องตลกให้ฟังหน่อย')">🤣 เล่าเรื่องตลก</div>
-        <div class="chip" onclick="quickSend('สอนภาษาอังกฤษวันละคำ')">🇬🇧 สอนภาษา</div>
-        <div class="chip" onclick="quickSend('ขอคำคมวันนี้')">✨ ขอคำคม</div>
-        <div class="chip" onclick="quickSend('เมนูแนะนำวันนี้')">🍜 เมนูแนะนำ</div>
-    </div>
-
-    <div class="input-area">
-        <input type="text" id="user-input" placeholder="พิมพ์ข้อความตรงนี้จ้ะ..." 
-               class="flex-1 p-3 md:p-4 bg-white rounded-xl border-2 border-pink-200 outline-none focus:border-pink-400 focus:ring-0 transition-all text-gray-700 placeholder-gray-400 shadow-sm">
-        <button id="send-btn" class="bg-gradient-to-r from-pink-400 to-rose-400 text-white px-6 py-3 md:px-8 md:py-3 rounded-xl hover:shadow-lg hover:from-pink-500 hover:to-rose-500 active:scale-95 transition-all font-medium whitespace-nowrap shadow-md">
-            ส่งจ้ะ!
-        </button>
-    </div>
-
-    <!-- API Key Warning Modal -->
-    <div id="api-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-6 rounded-2xl max-w-sm w-[90%] shadow-2xl text-center">
-            <h3 class="text-xl font-bold text-pink-600 mb-2">⚠️ แจ้งเตือน API Key</h3>
-            <p class="text-gray-600 text-sm mb-4">คุณยังไม่ได้ใส่ Google AI API Key พี่นาน้าจะตอบได้แค่ประโยคพื้นฐานเท่านั้น</p>
-            <p class="text-gray-500 text-xs mb-4">กรุณาแก้ไขไฟล์แล้วใส่ Key ในบรรทัดที่ 300 หรือใช้งานแบบ Offline Mode (ตอบสคริปต์)</p>
-            <button onclick="document.getElementById('api-modal').style.display='none'" class="bg-pink-500 text-white px-6 py-2 rounded-full hover:bg-pink-600 w-full">เข้าใจแล้ว</button>
-        </div>
-    </div>
-
-    <!-- Module Script for Google Generative AI SDK -->
-    <script type="module">
-        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-
-        // ==========================================
-        // 🔴 ตั้งค่า AI (Gemini) ตรงนี้ 🔴
-        // ==========================================
-        const API_KEY = 'AIzaSyDbf5ulaU8or8KgvaKLDXlbd9V6LDXPZuw';
-        // ใช้ gemini-2.5-flash เป็นรุ่นหลักตามที่ขอ
-        const MODEL_NAME_PRIMARY = 'gemini-2.5-flash';
-        // สำรองเผื่อรุ่นใหม่ยังมีปัญหา
-        const MODEL_NAME_FALLBACK = 'gemini-1.5-flash'; 
-        // ==========================================
-
-        let genAI = null;
-        let model = null;
-        let chatSession = null;
-        let isUsingFallback = false;
-
-        // Init AI with dynamic key
-        window.initAI = async function(key) {
-            if (!key) return false;
-            try {
-                genAI = new GoogleGenerativeAI(key);
-                model = genAI.getGenerativeModel({ model: MODEL_NAME_PRIMARY });
-                
-                const generationConfig = {
-                    temperature: 0.9,
-                    topK: 1,
-                    topP: 1,
-                    maxOutputTokens: 2048,
-                };
-                
-                const systemInstruction = "You are Pi Nana (พี่นาน้า). Act as a kind, caring, slightly teasing older sister (Onee-san) who is an office worker. You are knowledgeable in Math, Science, English, and love giving advice. Speak Thai naturally, use emojis, be sweet but smart. Do not mention you are an AI unless asked specifically. Keep answers concise.";
-                
-                chatSession = model.startChat({
-                    generationConfig,
-                    history: [
-                        { role: "user", parts: [{ text: systemInstruction }] },
-                        { role: "model", parts: [{ text: "รับทราบจ้ะ! พี่นาน้าคนนี้พร้อมดูแลเราแล้ว มีอะไรเล่าให้พี่ฟังได้หมดเลยนะจ๊ะ 💖" }] }
-                    ],
-                });
-                return true;
-            } catch (error) {
-                console.error("AI Init Error:", error);
-                return false;
+        // Error Boundary Component for Stability
+        class ErrorBoundary extends Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false };
             }
-        };
 
-        // Call Gemini Logic
-        window.callGeminiSDK = async function(userText) {
-            if (!chatSession) return null;
-            try {
-                const result = await chatSession.sendMessage(userText);
-                const response = await result.response;
-                return response.text();
-            } catch (error) {
-                console.warn("Primary Model Error, trying fallback...", error);
-                
-                if (!isUsingFallback) {
-                    try {
-                        isUsingFallback = true;
-                        const fallbackModel = genAI.getGenerativeModel({ model: MODEL_NAME_FALLBACK });
-                        // Simple retry logic without full re-init for this demo
-                        return null; 
-                    } catch (fallbackError) {
-                        return null; 
-                    }
+            static getDerivedStateFromError(error) {
+                return { hasError: true };
+            }
+
+            componentDidCatch(error, errorInfo) {
+                console.error("Uncaught error:", error, errorInfo);
+            }
+
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="flex flex-col items-center justify-center h-screen bg-dark-950 text-white p-4 text-center">
+                            <AlertCircle size={48} className="text-red-500 mb-4" />
+                            <h1 className="text-xl font-bold mb-2">อุ๊ย! ระบบสะดุดนิดหน่อย</h1>
+                            <p className="text-gray-400 mb-4">ลองรีเฟรชหน้าจอใหม่นะจ๊ะคนเก่ง</p>
+                            <button 
+                                onClick={() => window.location.reload()} 
+                                className="px-4 py-2 bg-purple-600 rounded-full hover:bg-purple-700 transition"
+                            >
+                                รีเฟรชหน้าจอ
+                            </button>
+                        </div>
+                    );
                 }
-                return null;
+                return this.props.children;
             }
-        };
-        
-        // Check if hardcoded key exists to skip modal
-        window.getHardcodedKey = function() { return API_KEY; };
-    </script>
+        }
 
-    <!-- Main Logic Script (UI & Game) -->
-    <script>
-        const chatContainer = document.getElementById('chat-container');
-        const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const typingIndicator = document.getElementById('typing');
-        const gameStatusBar = document.getElementById('game-status');
-        const miniHeartBar = document.getElementById('mini-heart-bar');
-        const scoreDisplay = document.getElementById('score-display');
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        
-        const avatarContainer = document.getElementById('bot-avatar-container');
-        const avatarImg = document.getElementById('avatar-img');
+        const App = () => {
+            const apiKey = "AIzaSyBan6GlpByh2noILHqQuQKcgoJA53cnIFk"; 
+            const profileImage = "https://i.postimg.cc/8PbPS4rb/Cute_anime_Office_Work_girl_With_Book_(1)_2000x3569.jpg";
 
-        // Global State
-        let gameState = { active: false, currentScenarioIndex: 0, score: parseInt(localStorage.getItem('nana_score')) || 0 };
-        let isDarkMode = false;
-        let userApiKey = localStorage.getItem('gemini_api_key') || '';
-
-        window.onload = function() {
-            // Check for Hardcoded Key first, then LocalStorage, then Modal
-            waitForSDK().then(() => {
-                const hardcodedKey = window.getHardcodedKey ? window.getHardcodedKey() : '';
-                const finalKey = hardcodedKey || userApiKey;
-
-                if (finalKey) {
-                    window.initAI(finalKey);
-                    addWelcomeMessage();
-                } else {
-                    document.getElementById('api-modal').style.display = 'flex';
+            // State
+            const [showProfile, setShowProfile] = useState(false);
+            const [gameMode, setGameMode] = useState(false);
+            const [affectionScore, setAffectionScore] = useState(0);
+            const [showScoreEffect, setShowScoreEffect] = useState(null);
+            const [selectedImage, setSelectedImage] = useState(null);
+            const [showRewriteMenu, setShowRewriteMenu] = useState(false);
+            const [isFullScreen, setIsFullScreen] = useState(false);
+            
+            const [messages, setMessages] = useState([
+                {
+                id: 1,
+                sender: 'bot',
+                text: 'สวัสดีจ้ะคนเก่ง! พี่นาน้า (Dark Mode) มาแล้วค่ะ 🌙✨ \n\nวันนี้พี่มาในลุคสีดำสุดเท่ สบายตา แถมระบบยังเสถียรขึ้นด้วยนะ! \n\n📚 **ติวหนังสือ / ปรึกษาชีวิต**\n🎮 **โหมดจีบสาว**\n📸 **ส่งรูป**\n\nพร้อมแล้วลุยเลยจ้ะ! 😊',
+                type: 'text'
                 }
-            });
-
-            // Check system preference for dark mode
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                toggleTheme();
-            }
-        };
-
-        // Wait for module script to load
-        function waitForSDK() {
-            return new Promise(resolve => {
-                const check = () => {
-                    if (window.initAI) resolve();
-                    else setTimeout(check, 100);
-                };
-                check();
-            });
-        }
-
-        // --- API Key Management ---
-        window.saveApiKey = function() {
-            const input = document.getElementById('api-key-input');
-            const key = input.value.trim();
-            if (key) {
-                localStorage.setItem('gemini_api_key', key);
-                userApiKey = key;
-                window.initAI(key);
-                document.getElementById('api-modal').style.display = 'none';
-                addWelcomeMessage();
-            } else {
-                alert("กรุณาใส่ API Key ก่อนนะจ๊ะ");
-            }
-        }
-
-        window.useOfflineMode = function() {
-            document.getElementById('api-modal').style.display = 'none';
-            addMessage("สวัสดีจ้ะ! (โหมดออฟไลน์) ถึงพี่จะไม่ฉลาดเท่าไหร่ แต่ก็พร้อมคุยนะ! 💖", false);
-        }
-
-        function addWelcomeMessage() {
-             const hour = new Date().getHours();
-            let greetingMsg = "สวัสดีจ้ะ! พี่นาน้า (AI) พร้อมคุยแล้ว ถามอะไรยากๆ มาได้เลยนะ!";
-
-            if (hour >= 5 && hour < 12) {
-                greetingMsg = "อรุณสวัสดิ์จ้ะ! เช้าสดใสแบบนี้ ทานข้าวเช้ารึยัง? วันนี้ดวงดีแน่นอน! ☀️";
-            } else if (hour >= 12 && hour < 17) {
-                greetingMsg = "สวัสดีตอนบ่ายจ้ะ! ถ้าง่วงก็มาเล่นเป่ายิ้งฉุบแก้เบื่อกับพี่ได้นะ 🍹";
-            } else if (hour >= 17 && hour < 22) {
-                greetingMsg = "เย็นแล้วนะ! วันนี้เรียนหรือทำงานเหนื่อยมั้ย? มาให้พี่กอดหน่อยเร้ว 🌇";
-            } else {
-                greetingMsg = "ดึกแล้วนะคนเก่ง... ยังไม่นอนเหรอ? พักผ่อนได้แล้วนะ 🌙";
-            }
-            addMessage(greetingMsg, false);
-            setFace('happy');
-        }
-
-        window.toggleTheme = function() {
-            isDarkMode = !isDarkMode;
-            document.body.classList.toggle('dark-mode');
+            ]);
             
-            if (isDarkMode) {
-                themeToggleBtn.innerText = '☀️';
-                themeToggleBtn.classList.replace('bg-pink-100', 'bg-gray-700');
-                themeToggleBtn.classList.replace('text-pink-500', 'text-yellow-300');
-                themeToggleBtn.classList.replace('hover:bg-pink-200', 'hover:bg-gray-600');
-            } else {
-                themeToggleBtn.innerText = '🌙';
-                themeToggleBtn.classList.replace('bg-gray-700', 'bg-pink-100');
-                themeToggleBtn.classList.replace('text-yellow-300', 'text-pink-500');
-                themeToggleBtn.classList.replace('hover:bg-gray-600', 'hover:bg-pink-200');
-            }
-        }
+            const [inputText, setInputText] = useState('');
+            const [isTyping, setIsTyping] = useState(false);
+            const messagesEndRef = useRef(null);
+            const fileInputRef = useRef(null);
 
-        // --- Avatar Logic ---
-        function setFace(mood) {
-            // Simple Sad Filter Only - No Movement
-            if(avatarImg) {
-                if(mood === 'sad' || mood === 'worry') {
-                    avatarImg.classList.add('anim-sad');
-                } else {
-                    avatarImg.classList.remove('anim-sad');
-                }
-            }
-        }
+            useEffect(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, [messages, isTyping]);
 
-        function addMessage(text, isUser) {
-            const rowDiv = document.createElement('div');
-            rowDiv.className = `chat-row ${isUser ? 'user' : 'bot'}`;
-            
-            if (!isUser) {
-                const avatar = document.createElement('img');
-                const mainAvatar = document.getElementById('avatar-img');
-                // Use the main avatar image as source for small chat bubbles
-                avatar.src = mainAvatar && mainAvatar.src ? mainAvatar.src : 'https://api.dicebear.com/9.x/avataaars/svg?seed=PiNanaFallback';
-                avatar.className = "chat-avatar-small";
-                avatar.onerror = function() { this.src = 'https://api.dicebear.com/9.x/avataaars/svg?seed=PiNanaFallback'; };
-                rowDiv.appendChild(avatar);
-            }
-
-            const bubbleDiv = document.createElement('div');
-            bubbleDiv.className = `chat-bubble ${isUser ? 'user-bubble' : 'bot-bubble'}`;
-            
-            // Parse Markdown for AI responses
-            if (!isUser && window.marked) {
-                bubbleDiv.innerHTML = marked.parse(text);
-            } else {
-                bubbleDiv.innerText = text;
-            }
-            
-            rowDiv.appendChild(bubbleDiv);
-            chatContainer.appendChild(rowDiv);
-            setTimeout(() => { chatContainer.scrollTop = chatContainer.scrollHeight; }, 50);
-        }
-
-        window.quickSend = function(text) {
-            userInput.value = text;
-            handleSend();
-            if (window.innerWidth > 640) userInput.focus();
-        };
-
-        async function handleSend() {
-            const text = userInput.value.trim();
-            if (!text) return;
-
-            addMessage(text, true);
-            userInput.value = '';
-
-            sendBtn.disabled = true;
-            sendBtn.style.opacity = '0.7';
-            typingIndicator.style.display = 'flex';
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-            if (gameState.active) {
-                setTimeout(() => {
-                    typingIndicator.style.display = 'none';
-                    processGameInput(text);
-                    sendBtn.disabled = false;
-                    sendBtn.style.opacity = '1';
-                }, 1000);
-            } else {
-                if (text.includes("เล่นเกม") || text.includes("จีบ")) {
-                    setTimeout(() => {
-                        typingIndicator.style.display = 'none';
-                        startGame();
-                        sendBtn.disabled = false;
-                        sendBtn.style.opacity = '1';
-                    }, 1000);
-                } else {
-                    let aiResponse = null;
-                    if (window.callGeminiSDK) {
-                        aiResponse = await window.callGeminiSDK(text);
-                    }
-
-                    typingIndicator.style.display = 'none';
-                    
-                    if (aiResponse) {
-                        addMessage(aiResponse, false);
-                        if(window.setFace) {
-                            if(aiResponse.includes("เสียใจ") || aiResponse.includes("เศร้า")) window.setFace('sad');
-                            else window.setFace('happy');
-                        }
+            const toggleFullScreen = async () => {
+                try {
+                    if (!document.fullscreenElement) {
+                        await document.documentElement.requestFullscreen();
+                        setIsFullScreen(true);
                     } else {
-                        const fallbackResponse = getScriptedResponse(text);
-                        addMessage(fallbackResponse.text, false);
-                        if(window.setFace) window.setFace(fallbackResponse.mood);
+                        if (document.exitFullscreen) {
+                            await document.exitFullscreen();
+                            setIsFullScreen(false);
+                        }
                     }
-                    
-                    sendBtn.disabled = false;
-                    sendBtn.style.opacity = '1';
+                } catch (err) {
+                    console.error(`Full-screen error: ${err.message}`);
+                    setMessages(prev => [...prev, {
+                        id: prev.length + 1,
+                        sender: 'bot',
+                        text: '⚠️ เบราว์เซอร์นี้ล็อกการขยายเต็มจอจ้ะ ใช้งานขนาดนี้ไปก่อนน้า 🥺',
+                        type: 'text'
+                    }]);
+                    setIsFullScreen(false);
                 }
-            }
-        }
-
-        // --- Offline Scripted Logic (Backup) ---
-        function getScriptedResponse(input) {
-            const text = input.toLowerCase();
-            const gentleResponses = {
-                "tired": { text: "โอ๋ๆ... มาให้พี่กอดนะคนเก่ง เหนื่อยมากเลยใช่ไหม? พักก่อนนะจ๊ะ", mood: "worry" },
-                "love": { text: "งื้อออ... ปากหวานจังเลย ชื่นใจที่สุดเลยจ้ะ!", mood: "love" },
-                "default": { text: "จ้ะ... พี่ตั้งใจฟังอยู่นะ (ตอนนี้ใช้โหมด Offline ตอบได้จำกัดนะจ๊ะ)", mood: "happy" }
             };
-            
-            if (text.includes("เหนื่อย")) return gentleResponses.tired;
-            if (text.includes("รัก") || text.includes("สวย")) return gentleResponses.love;
-            return gentleResponses.default;
-        }
 
-        // --- Endless Game Logic ---
-        const gameScenarios = [
-            { q: "วันหยุดนี้พี่อยากพักผ่อน เราจะพาพี่ไปไหนดี?", check: t => t.includes('คาเฟ่') || t.includes('ทะเล') ? 10 : (t.includes('ห้าง') ? 5 : 0), replies: { good: "ว้าว! รู้ใจพี่ที่สุดเลย 🥰", ok: "ก็น่าสนใจนะจ๊ะ", bad: "หืม? แปลกดีนะ" } },
-            { q: "ถ้าพี่ทำขนมไหม้ เราจะบอกว่าไง?", check: t => t.includes('อร่อย') || t.includes('กิน') ? 10 : (t.includes('ไหม้') ? 5 : -5), replies: { good: "โธ่คนดี... กินหมดเลยเหรอ? รักนะ 💖", ok: "ขอบคุณที่บอกตรงๆ จ้ะ", bad: "แง... ใจร้ายจัง 😢" } },
-            { q: "มีหนุ่มๆ มองพี่ เราจะทำไง?", check: t => t.includes('หวง') || t.includes('จับมือ') ? 10 : (t.includes('มอง') ? 5 : -5), replies: { good: "หวงพี่เหรอ? น่ารักจัง... (เขิน)", ok: "แหม ก็พี่สวยนี่นา", bad: "ไม่หวงหน่อยเหรอ? เชอะ!" } }
-        ];
+            const handleImageUpload = (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    if (file.size > 5 * 1024 * 1024) {
+                        setMessages(prev => [...prev, {
+                            id: prev.length + 1,
+                            sender: 'bot',
+                            text: '⚠️ รูปใหญ่ไปนิดนึง (ขอไม่เกิน 5MB น้า) เดี๋ยวเน็ตช้าจ้ะ',
+                            type: 'text'
+                        }]);
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onloadend = () => setSelectedImage(reader.result);
+                    reader.readAsDataURL(file);
+                }
+            };
 
-        function startGame() {
-            if (gameState.active) return;
-            gameState.active = true;
-            addMessage("🌸 เข้าสู่โหมดจีบพี่นาน้า! ตอบให้โดนใจนะจ๊ะ... เริ่ม!", false);
-            setTimeout(askRandomQuestion, 1500);
-        }
+            const clearImage = () => {
+                setSelectedImage(null);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+            };
 
-        function quitGame() {
-            gameState.active = false;
-            gameStatusBar.style.display = 'none';
-            addMessage(`จบเกมจ้ะ! สนุกมากเลย ไว้มาเล่นกันใหม่นะ (คะแนน: ${gameState.score})`, false);
-            localStorage.setItem('nana_score', gameState.score);
-            if(window.setFace) window.setFace('happy');
-        }
+            const handleSmartRewrite = async (style) => {
+                if (!inputText.trim()) return;
+                setIsTyping(true);
+                setShowRewriteMenu(false);
 
-        function processGameInput(text) {
-            if (["เลิก", "พอ", "หยุด"].some(w => text.includes(w))) { quitGame(); return; }
-            
-            const scenario = gameScenarios[Math.floor(Math.random() * gameScenarios.length)];
-            const score = scenario.check(text);
-            gameState.score += score;
-            
-            let reply = score >= 10 ? scenario.replies.good : (score > 0 ? scenario.replies.ok : scenario.replies.bad);
-            let mood = score >= 10 ? 'love' : (score > 0 ? 'happy' : 'angry');
-            
-            addMessage(reply, false);
-            if(window.setFace) window.setFace(mood);
-            updateHeartBar();
-            setTimeout(askRandomQuestion, 2000);
-        }
+                try {
+                    const response = await fetch(
+                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                contents: [{ parts: [{ text: `Rewrite this Thai text to be "${style}" (keep meaning): "${inputText}"` }] }]
+                            }),
+                        }
+                    );
+                    const data = await response.json();
+                    const rewrittenText = data.candidates?.[0]?.content?.parts?.[0]?.text || inputText;
+                    setInputText(rewrittenText.replace(/['"]/g, '').trim());
+                } catch (error) {
+                    console.error("Rewrite error:", error);
+                } finally {
+                    setIsTyping(false);
+                }
+            };
 
-        function askRandomQuestion() {
-            if(!gameState.active) return;
-            const q = gameScenarios[Math.floor(Math.random() * gameScenarios.length)].q;
-            gameStatusBar.style.display = 'flex';
-            addMessage(q, false);
-            if(window.setFace) window.setFace('happy');
-        }
+            const callGeminiAPI = async (newText, newImage = null) => {
+                setIsTyping(true);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 45000); 
 
-        function updateHeartBar() {
-            let percent = Math.min(100, Math.max(0, gameState.score));
-            miniHeartBar.style.width = `${percent}%`;
-            scoreDisplay.innerText = gameState.score;
-        }
+                const advisorPrompt = `
+                คุณคือ "พี่นาน้า" (Phi Nana) AI พี่สาวอัจฉริยะและที่ปรึกษาชีวิต
+                CORE PERSONA: อบอุ่น (Warm), ฉลาด (Smart), เข้าใจโลก (Empathic), ใช้ภาษาไทยสละสลวย
+                CAPABILITIES: Context Aware, Vision Analysis, Tutor, Advisor
+                SAFETY: ห้ามหยาบคาย ห้ามลามก ถ้าเสี่ยงฆ่าตัวตายแนะนำสายด่วน 1323
+                `;
 
-        sendBtn.addEventListener('click', handleSend);
-        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
+                const datingGamePrompt = `
+                คุณคือ "พี่นาน้า" สาวสวยใจดี ขี้เล่นนิดๆ ใน "เกมจีบสาว"
+                RULES: ตอบสนองตาม "Affection Score" ให้คะแนน (-10 ถึง +10) เริ่มต้นข้อความด้วย {{SCORE: +5}} เสมอ
+                REACTION: <30 (พี่น้อง), 30-70 (เขิน), >70 (แฟน)
+                `;
+
+                const systemInstruction = gameMode ? datingGamePrompt : advisorPrompt;
+
+                const history = messages
+                .slice(-10)
+                .filter(msg => msg.text && msg.text.trim() !== '') 
+                .map(msg => ({
+                    role: msg.sender === 'user' ? 'user' : 'model',
+                    parts: [{ text: msg.text }] 
+                }));
+
+                const currentParts = [];
+                let textToSend = newText;
+                if (gameMode) textToSend = `(Current Affection Score: ${affectionScore}) ${newText}`;
+                
+                currentParts.push({ text: textToSend });
+
+                if (newImage) {
+                    try {
+                        const base64Data = newImage.split(',')[1];
+                        const mimeType = newImage.split(';')[0].split(':')[1];
+                        currentParts.push({ inlineData: { mimeType: mimeType, data: base64Data } });
+                    } catch (e) {
+                        console.error("Image processing error", e);
+                    }
+                }
+
+                try {
+                    const response = await fetch(
+                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            signal: controller.signal,
+                            body: JSON.stringify({
+                                contents: [...history, { role: "user", parts: currentParts }],
+                                systemInstruction: { parts: [{ text: systemInstruction }] },
+                            }),
+                        }
+                    );
+
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+                    const data = await response.json();
+                    
+                    if (!data.candidates || data.candidates.length === 0) {
+                        if (data.promptFeedback && data.promptFeedback.blockReason) {
+                            throw new Error("BLOCKED_CONTENT");
+                        }
+                        throw new Error("NO_RESPONSE");
+                    }
+
+                    const candidate = data.candidates[0];
+                    if (candidate.finishReason === "SAFETY") {
+                        throw new Error("SAFETY_VIOLATION");
+                    }
+
+                    let botResponse = candidate.content?.parts?.[0]?.text || "พี่ขอโทษนะคะ พี่เบลอนิดหน่อย ลองถามใหม่อีกทีได้ไหมคะ? 🥺";
+
+                    if (gameMode) {
+                        const scoreMatch = botResponse.match(/\{\{SCORE:\s*([+-]?\d+)\}\}/);
+                        if (scoreMatch) {
+                            const scoreChange = parseInt(scoreMatch[1], 10);
+                            setAffectionScore(prev => Math.max(0, Math.min(100, prev + scoreChange)));
+                            setShowScoreEffect(scoreChange);
+                            setTimeout(() => setShowScoreEffect(null), 2000);
+                            botResponse = botResponse.replace(/\{\{SCORE:\s*[+-]?\d+\}\}/, '').trim();
+                        }
+                    }
+
+                    setMessages(prev => [...prev, { id: prev.length + 1, sender: 'bot', text: botResponse, type: 'text' }]);
+
+                } catch (error) {
+                    console.error("Gemini API Error:", error);
+                    
+                    let errorMsg = "ขอโทษนะจ๊ะคนเก่ง ระบบพี่ขัดข้องชั่วคราว รอสักครู่แล้วลองใหม่นะ! 🔧";
+                    
+                    if (error.name === 'AbortError') {
+                        errorMsg = "พี่คิดนานไปหน่อย (เน็ตอาจจะช้า) ลองถามใหม่อีกทีนะจ๊ะ 🐢";
+                    } else if (error.message === "SAFETY_VIOLATION" || error.message === "BLOCKED_CONTENT") {
+                        errorMsg = "เรื่องนี้พี่คุยด้วยไม่ได้จริงๆ จ้ะ (เนื้อหาอาจจะไม่เหมาะสม) เปลี่ยนเรื่องคุยกันดีกว่าเนอะ 🚫";
+                    } else if (error.message.includes("429")) {
+                        errorMsg = "คนคุยกับพี่เยอะมาก! ขอพักหายใจแป๊บนึงนะ (ลองใหม่ใน 10 วิ) ⏳";
+                    }
+
+                    setMessages(prev => [...prev, { 
+                        id: prev.length + 1, 
+                        sender: 'bot', 
+                        text: errorMsg, 
+                        type: 'text' 
+                    }]);
+                } finally {
+                    setIsTyping(false);
+                }
+            };
+
+            const handleSend = () => {
+                if ((!inputText.trim() && !selectedImage) || isTyping) return;
+
+                const textToSend = inputText;
+                const imageToSend = selectedImage;
+
+                setMessages(prev => [...prev, { 
+                    id: prev.length + 1, 
+                    sender: 'user', 
+                    text: textToSend, 
+                    image: imageToSend, 
+                    type: 'text' 
+                }]);
+
+                setInputText('');
+                clearImage();
+                
+                callGeminiAPI(textToSend, imageToSend);
+            };
+
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter') handleSend();
+            };
+
+            const toggleGameMode = () => {
+                const newMode = !gameMode;
+                setGameMode(newMode);
+                setMessages(prev => [...prev, {
+                    id: prev.length + 1,
+                    sender: 'bot',
+                    text: newMode 
+                        ? '💕 เข้าสู่โหมดจีบสาว! ไหนลองโชว์คารมหน่อยสิ (จำไว้นะ พี่ให้คะแนนอยู่!)' 
+                        : '📚 กลับสู่โหมดปกติจ้ะ มีเรื่องอะไรให้พี่ช่วยคิด หรืออยากติววิชาไหนบอกได้เลยนะ',
+                    type: 'text'
+                }]);
+                if (newMode) setAffectionScore(0);
+            };
+
+            return (
+                <div className="flex h-screen bg-dark-950 font-sans text-gray-100 overflow-hidden relative">
+                
+                <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleImageUpload} 
+                    accept="image/*" 
+                    className="hidden" 
+                />
+
+                {showScoreEffect !== null && (
+                    <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none animate-bounce text-4xl font-bold ${showScoreEffect > 0 ? 'text-pink-400' : 'text-gray-400'}`}>
+                        {showScoreEffect > 0 ? `+${showScoreEffect} ❤️` : `${showScoreEffect} 💔`}
+                    </div>
+                )}
+
+                {/* Main Container */}
+                <div className="flex-1 flex flex-col relative min-w-0">
+                    
+                    {/* Header - Dark */}
+                    <header className="bg-dark-900 px-4 py-3 flex items-center justify-between shadow-md border-b border-dark-700 z-10">
+                        <div className="flex items-center gap-3">
+                            <button className="md:hidden text-purple-400"><ArrowLeft size={24} /></button>
+                            <div className="relative cursor-pointer" onClick={() => setShowProfile(!showProfile)}>
+                                <div className={`w-10 h-10 rounded-full overflow-hidden border-2 ${gameMode ? 'border-pink-500' : 'border-purple-500'} flex items-center justify-center shadow-lg transition-colors duration-500`}>
+                                    <img src={profileImage} alt="Phi Nana" className="w-full h-full object-cover" />
+                                </div>
+                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-dark-900"></div>
+                            </div>
+                            <div className="cursor-pointer" onClick={() => setShowProfile(!showProfile)}>
+                                <h1 className="font-bold text-gray-100 leading-tight text-[17px]">
+                                    พี่นาน้า {gameMode && <span className="text-pink-400 text-sm">(โหมดจีบสาว 💕)</span>}
+                                </h1>
+                                {gameMode ? (
+                                    <div className="flex items-center gap-1 text-xs text-pink-400 font-bold">
+                                        <Heart size={12} fill="currentColor" /> คะแนนหัวใจ: {affectionScore}%
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-gray-400 font-medium">Active now • Stable</p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 text-purple-400">
+                            <div onClick={toggleGameMode} className="cursor-pointer hover:bg-dark-800 p-2 rounded-full transition" title={gameMode ? "เลิกเล่นเกม" : "เล่นเกมจีบสาว"}>
+                                {gameMode ? <X size={20} className="text-pink-400"/> : <Gamepad2 size={20}/>}
+                            </div>
+                            <div onClick={toggleFullScreen} className="cursor-pointer hover:bg-dark-800 p-2 rounded-full transition hidden sm:flex" title="เต็มจอ">
+                                {isFullScreen ? <Minimize size={20} className="text-gray-400"/> : <Maximize size={20} className="text-gray-400"/>}
+                            </div>
+                            <Info size={24} className={`cursor-pointer hover:bg-dark-800 rounded-full p-0.5 ${showProfile ? 'bg-dark-800 text-purple-300' : ''}`} onClick={() => setShowProfile(!showProfile)} />
+                        </div>
+                    </header>
+
+                    {/* Chat Content - Dark */}
+                    <div className={`flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-dark-700 ${gameMode ? 'bg-pink-950/20' : 'bg-dark-950'}`}>
+                        
+                        <div className="flex flex-col items-center justify-center pt-6 pb-8 space-y-2">
+                            <div className={`w-24 h-24 rounded-full overflow-hidden border-4 ${gameMode ? 'border-pink-500 animate-pulse-glow' : 'border-purple-500'} flex items-center justify-center shadow-xl transition-all duration-500`}>
+                                <img src={profileImage} alt="Phi Nana" className="w-full h-full object-cover" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-100">พี่นาน้า (Phi Nana)</h2>
+                            <p className="text-sm text-gray-400">{gameMode ? '💕 กำลังรอให้จีบอยู่...' : 'AI Advisor • Dark Mode'}</p>
+                        </div>
+
+                        {messages.map((msg, index) => {
+                            const isLastFromSender = index === messages.length - 1 || messages[index + 1].sender !== msg.sender;
+                            return (
+                                <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} group mb-1`}>
+                                    <div className={`flex max-w-[85%] md:max-w-[70%] items-end gap-2`}>
+                                        
+                                        {msg.sender === 'bot' && (
+                                            <div className="w-8 h-8 flex-shrink-0">
+                                                {isLastFromSender ? (
+                                                    <div className={`w-8 h-8 rounded-full overflow-hidden border ${gameMode ? 'border-pink-500' : 'border-purple-500'} flex items-center justify-center`}>
+                                                        <img src={profileImage} alt="PN" className="w-full h-full object-cover" />
+                                                    </div>
+                                                ) : <div className="w-8"></div>}
+                                            </div>
+                                        )}
+
+                                        <div className="flex flex-col items-end w-full">
+                                            {msg.image && (
+                                                <div className={`mb-1 p-1 rounded-xl overflow-hidden shadow-md border ${msg.sender === 'user' ? 'bg-purple-600 border-purple-500' : 'bg-dark-800 border-dark-700'}`}>
+                                                    <img src={msg.image} alt="Sent" className="w-full h-auto rounded-lg max-h-60 object-cover" />
+                                                </div>
+                                            )}
+                                            
+                                            {msg.text && (
+                                                <div className={`px-4 py-2.5 text-[15px] leading-snug whitespace-pre-line shadow-md break-words w-full
+                                                    ${msg.sender === 'user' 
+                                                        ? (gameMode ? 'bg-pink-600 text-white rounded-2xl rounded-tr-sm' : 'bg-purple-600 text-white rounded-2xl rounded-tr-sm')
+                                                        : 'bg-dark-800 text-gray-100 rounded-2xl rounded-tl-sm border border-dark-700'
+                                                    }`}
+                                                >
+                                                    {msg.text}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        
+                        {isTyping && (
+                            <div className="flex justify-start items-end gap-2 mt-1 pl-10">
+                                <div className="bg-dark-800 border border-dark-700 px-4 py-3 rounded-2xl rounded-tl-sm flex space-x-1 items-center h-9 shadow-md">
+                                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-100"></div>
+                                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+                                </div>
+                            </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                    </div>
+
+                    {/* Smart Rewrite Popup - Dark */}
+                    {showRewriteMenu && (
+                        <div className="absolute bottom-20 left-4 right-4 md:left-20 md:right-20 bg-dark-800 rounded-xl shadow-2xl border border-dark-700 p-3 flex flex-col gap-2 z-20 animate-fade-in-up">
+                            <div className="flex justify-between items-center text-xs text-gray-400 px-1">
+                                <span className="flex items-center gap-1"><Sparkles size={12}/> AI แต่งประโยค:</span>
+                                <X size={14} className="cursor-pointer hover:text-red-400" onClick={() => setShowRewriteMenu(false)} />
+                            </div>
+                            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                                <button onClick={() => handleSmartRewrite("สุภาพและทางการ")} className="whitespace-nowrap px-3 py-2 bg-purple-900/50 text-purple-300 rounded-lg text-xs hover:bg-purple-900 transition border border-purple-800">👔 ทางการ</button>
+                                <button onClick={() => handleSmartRewrite("น่ารัก ขี้อ้อน")} className="whitespace-nowrap px-3 py-2 bg-pink-900/50 text-pink-300 rounded-lg text-xs hover:bg-pink-900 transition border border-pink-800">🥺 ขี้อ้อน</button>
+                                <button onClick={() => handleSmartRewrite("มั่นใจ กระชับ")} className="whitespace-nowrap px-3 py-2 bg-blue-900/50 text-blue-300 rounded-lg text-xs hover:bg-blue-900 transition border border-blue-800">😎 มั่นใจ</button>
+                                <button onClick={() => handleSmartRewrite("เศร้าๆ ดราม่า")} className="whitespace-nowrap px-3 py-2 bg-gray-700 text-gray-300 rounded-lg text-xs hover:bg-gray-600 transition border border-gray-600">🌧️ เศร้าๆ</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Input Area - Dark */}
+                    <div className="bg-dark-900 p-3 pt-2 border-t border-dark-800">
+                        {selectedImage && (
+                            <div className="flex items-center gap-2 mb-2 px-2">
+                                <div className="relative group">
+                                    <img src={selectedImage} alt="Preview" className="h-16 w-auto rounded-lg border border-dark-700 shadow-sm" />
+                                    <button onClick={clearImage} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full p-0.5 shadow-md hover:bg-red-500 opacity-0 group-hover:opacity-100 transition"><X size={12} /></button>
+                                </div>
+                                <span className="text-xs text-gray-400 animate-pulse">แนบรูปแล้ว...</span>
+                            </div>
+                        )}
+
+                        <div className="flex items-end gap-2">
+                            <div className={`flex gap-1 pb-2 ${gameMode ? 'text-pink-500' : 'text-purple-500'}`}>
+                                <div className={`p-2 hover:bg-dark-800 rounded-full cursor-pointer transition ${selectedImage ? 'bg-dark-800 text-purple-300' : ''}`} onClick={() => fileInputRef.current.click()}>
+                                    <ImageIcon size={22} />
+                                </div>
+                                <div className={`p-2 hover:bg-dark-800 rounded-full cursor-pointer transition ${showRewriteMenu ? 'bg-dark-800 text-purple-300' : ''}`} onClick={() => setShowRewriteMenu(!showRewriteMenu)}>
+                                    <Wand2 size={22} />
+                                </div>
+                            </div>
+
+                            <div className="flex-1 bg-dark-800 rounded-3xl px-4 py-2.5 flex items-center transition-all focus-within:ring-1 focus-within:ring-purple-500 border border-transparent focus-within:border-purple-500">
+                                <input
+                                    type="text"
+                                    value={inputText}
+                                    onChange={(e) => setInputText(e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                    placeholder={gameMode ? "จีบพี่หน่อย..." : "พิมพ์ข้อความ..."}
+                                    className="flex-1 bg-transparent focus:outline-none text-gray-100 placeholder-gray-500 text-[15px]"
+                                    disabled={isTyping}
+                                />
+                                <Smile size={20} className="text-gray-500 cursor-pointer hover:text-gray-300 ml-2" />
+                            </div>
+                            
+                            <button 
+                                onClick={handleSend}
+                                disabled={(!inputText.trim() && !selectedImage) || isTyping}
+                                className={`p-2.5 rounded-full transition shadow-lg mb-0.5
+                                    ${(!inputText.trim() && !selectedImage) || isTyping
+                                    ? 'bg-dark-700 text-gray-500 cursor-not-allowed' 
+                                    : (gameMode ? 'bg-pink-600 hover:bg-pink-500 text-white' : 'bg-purple-600 hover:bg-purple-500 text-white transform hover:scale-105')
+                                    }`}
+                            >
+                                {isTyping ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Sidebar - Dark */}
+                <div className={`${showProfile ? 'w-80 border-l border-dark-800' : 'w-0'} bg-dark-900 transition-all duration-300 ease-in-out overflow-hidden hidden md:flex flex-col`}>
+                    <div className="flex flex-col items-center pt-8 pb-4 px-4 text-center">
+                        <div className={`w-24 h-24 rounded-full overflow-hidden border-4 ${gameMode ? 'border-pink-500' : 'border-purple-500'} flex items-center justify-center shadow-lg mb-3 transition-colors duration-500`}>
+                            <img src={profileImage} alt="Phi Nana" className="w-full h-full object-cover" />
+                        </div>
+                        <h2 className="text-xl font-bold text-gray-100">พี่นาน้า (Phi Nana)</h2>
+                        <p className="text-xs text-gray-400 mt-1">Ultimate AI Advisor</p>
+                    </div>
+
+                    {gameMode ? (
+                        <div className="px-6 py-2">
+                            <div className="bg-pink-900/20 border border-pink-900/50 rounded-xl p-4 text-center shadow-inner">
+                                <h3 className="text-pink-400 font-bold mb-2 flex items-center justify-center gap-1"><Trophy size={16}/> คะแนนหัวใจ</h3>
+                                <div className="text-4xl font-extrabold text-pink-500 mb-2">{affectionScore}</div>
+                                <div className="w-full bg-dark-800 rounded-full h-2.5 overflow-hidden">
+                                    <div className="bg-pink-500 h-2.5 rounded-full transition-all duration-500" style={{ width: `${affectionScore}%` }}></div>
+                                </div>
+                                <p className="text-xs text-gray-400 mt-3 italic">
+                                    {affectionScore < 20 ? "สถานะ: พี่น้องโซน 😅" : 
+                                    affectionScore < 50 ? "สถานะ: เริ่มเขินๆ 😳" : 
+                                    affectionScore < 80 ? "สถานะ: คนพิเศษ 🥰" : "สถานะ: แฟน! 💖"}
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="px-5 py-2">
+                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">ความสามารถพิเศษ</h3>
+                            <div className="space-y-3">
+                                <div className="bg-dark-800 border border-dark-700 p-3 rounded-xl flex items-center gap-3 shadow-md hover:bg-dark-700 transition cursor-default">
+                                    <div className="bg-indigo-900/50 p-2 rounded-lg text-indigo-400"><ImageIcon size={18}/></div>
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-gray-200">Vision Analysis</h4>
+                                        <p className="text-[10px] text-gray-500">วิเคราะห์รูปภาพ การบ้าน อาหาร</p>
+                                    </div>
+                                </div>
+                                <div className="bg-dark-800 border border-dark-700 p-3 rounded-xl flex items-center gap-3 shadow-md hover:bg-dark-700 transition cursor-default">
+                                    <div className="bg-purple-900/50 p-2 rounded-lg text-purple-400"><Wand2 size={18}/></div>
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-gray-200">Smart Rewrite</h4>
+                                        <p className="text-[10px] text-gray-500">ช่วยแต่งประโยคให้น่าฟัง</p>
+                                    </div>
+                                </div>
+                                <div className="bg-dark-800 border border-dark-700 p-3 rounded-xl flex items-center gap-3 shadow-md hover:bg-dark-700 transition cursor-default">
+                                    <div className="bg-green-900/50 p-2 rounded-lg text-green-400"><Brain size={18}/></div>
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-gray-200">Context Memory</h4>
+                                        <p className="text-[10px] text-gray-500">จำบทสนทนาก่อนหน้าได้แม่นยำ</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(
+            <ErrorBoundary>
+                <App />
+            </ErrorBoundary>
+        );
     </script>
 </body>
 </html>
